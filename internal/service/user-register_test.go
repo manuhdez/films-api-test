@@ -28,6 +28,9 @@ func TestUserRegister(t *testing.T) {
 		u, err := register.Register(ctx, testUser)
 		assert.NoError(t, err)
 		assert.Equal(t, testUser, u)
+
+		repo.AssertExpectations(t)
+		hasher.AssertExpectations(t)
 	})
 
 	t.Run("returns an error if the repository fails to save user", func(t *testing.T) {
@@ -42,6 +45,9 @@ func TestUserRegister(t *testing.T) {
 
 		_, err := register.Register(ctx, testUser)
 		assert.ErrorIs(t, err, testErr)
+
+		repo.AssertExpectations(t)
+		hasher.AssertExpectations(t)
 	})
 
 	t.Run("returns an error if password hashing fails", func(t *testing.T) {
@@ -55,5 +61,8 @@ func TestUserRegister(t *testing.T) {
 
 		_, err := register.Register(ctx, testUser)
 		assert.ErrorIs(t, err, hashErr)
+
+		repo.AssertExpectations(t)
+		hasher.AssertExpectations(t)
 	})
 }
