@@ -71,15 +71,15 @@ logging and jwt which wil come in handy for this project.
 
 **Development setup**
 
-- [ ] Setup HTTP server
-- [ ] Docker compose with Postgres database
-- [ ] Makefile commands to run the application
-- [ ] Setup code formatting (gofmt)
+- [x] Setup HTTP server
+- [x] Docker compose with Postgres database
+- [x] Makefile commands to run the application
+- [x] Setup code formatting (gofmt)
 
 **Database**
 
-- [ ] Setup postgres database
-- [ ] Setup database migrations
+- [x] Setup postgres database
+- [x] Setup database migrations
 - [ ] Setup database seeding
 
 **User authentication**

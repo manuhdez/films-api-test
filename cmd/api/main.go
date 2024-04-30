@@ -1,23 +1,18 @@
 package main
 
 import (
-	"net/http"
-	"os"
+	"log"
 
-	"github.com/labstack/echo/v4"
+	"github.com/manuhdez/films-api-test/database"
+	"github.com/manuhdez/films-api-test/internal/http/server"
 )
 
 func main() {
-	e := echo.New()
-
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello world")
-	})
-
-	port, ok := os.LookupEnv("APP_PORT")
-	if !ok {
-		panic("not APP_PORT has been defined")
+	db, err := database.NewPostgresConnection()
+	if err != nil {
+		panic(err)
 	}
 
-	e.Logger.Fatal(e.Start(":" + port))
+	srv := server.New(db)
+	log.Fatal(srv.Start())
 }
