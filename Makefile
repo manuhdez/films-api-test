@@ -1,10 +1,13 @@
-.PHONY: dev
+.PHONY: dev test
 
 format:
 	@gofmt -w .
 
 tidy:
 	@go mod tidy
+
+test:
+	@go test ./...
 
 # Docker commands
 build:

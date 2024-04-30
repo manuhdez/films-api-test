@@ -5,16 +5,16 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/manuhdez/films-api-test/internal/domain/user"
+	"github.com/manuhdez/films-api-test/test/factories"
 	"github.com/manuhdez/films-api-test/test/mocks"
 )
 
 func TestUserRegister(t *testing.T) {
-	testUser := user.New(uuid.New(), "fake-username", "fake-password")
+	testUser := factories.User()
 
 	t.Run("returns the user saved in the repository", func(t *testing.T) {
 		repo := new(mocks.MockUserRepository)
