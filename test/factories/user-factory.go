@@ -8,9 +8,9 @@ import (
 )
 
 func User() user.User {
-	return user.New(
-		uuid.New(),
-		faker.Internet().UserName(),
-		faker.Internet().Password(6, 12),
-	)
+	return user.User{
+		ID:       uuid.New(),
+		Username: faker.Internet().UserName(),
+		Password: faker.Internet().Password(6, 12),
+	}
 }

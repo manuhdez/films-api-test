@@ -36,7 +36,10 @@ func (h RegisterUser) Handle(c echo.Context) error {
 		return c.String(http.StatusBadRequest, bindErr.Error())
 	}
 
-	newUser := user.Create(req.Username, req.Password)
+	newUser, userErr := user.Create(req.Username, req.Password)
+	if userErr != nil {
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, userErr.Error())
+	}
 
 	usr, registerErr := h.registerService.Register(context.Background(), newUser)
 	if registerErr != nil {

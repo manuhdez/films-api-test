@@ -15,6 +15,7 @@ import (
 var (
 	ErrFailedToCreateUser   = errors.New("failed to create user")
 	ErrUsernameAlreadyInUse = errors.New("username is already in use")
+	ErrUsernameNotFound     = errors.New("username does not exist")
 )
 
 type PostgresUser struct {
@@ -33,7 +34,7 @@ func NewPostgresUserRepository(db *sql.DB) *PostgresUserRepository {
 
 func (r *PostgresUserRepository) Save(c context.Context, u user.User) (user.User, error) {
 	query := `INSERT INTO users (id, username, password) VALUES ($1, $2, $3)`
-	_, err := r.db.Exec(query, u.ID, u.Username, u.Password)
+	_, err := r.db.ExecContext(c, query, u.ID, u.Username, u.Password)
 	if err != nil {
 		slog.Error("failed to save user", "err", err)
 
