@@ -4,7 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+
+	"syreclabs.com/go/faker"
 )
+
+var testLongPassword = faker.Internet().Password(PasswordMaxLength, 50)
 
 func TestUser_ensureValidUsername(t *testing.T) {
 	for _, test := range []struct {
@@ -23,6 +27,25 @@ func TestUser_ensureValidUsername(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			got := ensureValidUsername(test.Input)
 			fmt.Println("from:", test.Input, "got:", got)
+			if !errors.Is(got, test.Expected) {
+				t.Errorf("got %v, expected %v", got, test.Expected)
+			}
+		})
+	}
+}
+
+func TestUser_ensureValidPassword(t *testing.T) {
+	for _, test := range []struct {
+		Name     string
+		Input    string
+		Expected error
+	}{
+		{Name: "with valid password", Input: "password", Expected: nil},
+		{Name: "with a short password", Input: "pass", Expected: ErrShortPassword},
+		{Name: "with a long password", Input: testLongPassword, Expected: ErrLongPassword},
+	} {
+		t.Run(test.Name, func(t *testing.T) {
+			got := ensureValidPassword(test.Input)
 			if !errors.Is(got, test.Expected) {
 				t.Errorf("got %v, expected %v", got, test.Expected)
 			}

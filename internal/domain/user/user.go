@@ -2,15 +2,23 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 
 	"github.com/google/uuid"
+)
+
+const (
+	PasswordMinLength = 8
+	PasswordMaxLength = 24
 )
 
 var (
 	ErrEmptyUsername            = errors.New("username must not be empty")
 	ErrUsernameOnlyAlphanumeric = errors.New("username must only contain alphanumeric characters")
 	ErrUsernameStartWithLetter  = errors.New("username must start with a letter")
+	ErrShortPassword            = fmt.Errorf("password must be at least %d characters", PasswordMinLength)
+	ErrLongPassword             = fmt.Errorf("password must not be longer than %d characters", PasswordMaxLength)
 )
 
 type User struct {
@@ -21,6 +29,10 @@ type User struct {
 
 func New(id uuid.UUID, username, password string) (User, error) {
 	if err := ensureValidUsername(username); err != nil {
+		return User{}, err
+	}
+
+	if err := ensureValidPassword(password); err != nil {
 		return User{}, err
 	}
 
@@ -49,6 +61,18 @@ func ensureValidUsername(value string) error {
 	// Should start with a letter
 	if !regexp.MustCompile("^[a-zA-Z]").MatchString(value) {
 		return ErrUsernameStartWithLetter
+	}
+
+	return nil
+}
+
+func ensureValidPassword(value string) error {
+	if len(value) < PasswordMinLength {
+		return ErrShortPassword
+	}
+
+	if len(value) > PasswordMaxLength {
+		return ErrLongPassword
 	}
 
 	return nil
