@@ -7,6 +7,10 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
+
+	"github.com/manuhdez/films-api-test/internal/http/handler"
+	"github.com/manuhdez/films-api-test/internal/infra"
+	"github.com/manuhdez/films-api-test/internal/service"
 )
 
 type Server struct {
@@ -16,9 +20,17 @@ type Server struct {
 
 func New(db *sql.DB) Server {
 	e := echo.New()
+
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello world")
 	})
+
+	userRepo := infra.NewPostgresUserRepository(db)
+	passwordHasher := infra.NewBcryptPasswordHasher()
+	userCreator := service.NewUserRegister(userRepo, passwordHasher)
+
+	api := e.Group("/api")
+	api.POST("/register", handler.NewRegisterUser(userCreator).Handle)
 
 	return Server{
 		engine: e,
