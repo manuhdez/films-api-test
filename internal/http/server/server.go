@@ -3,10 +3,10 @@ package server
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/manuhdez/films-api-test/internal/http/handler"
 	"github.com/manuhdez/films-api-test/internal/infra"
@@ -21,9 +21,9 @@ type Server struct {
 func New(db *sql.DB) Server {
 	e := echo.New()
 
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello world")
-	})
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.DefaultCORSConfig))
 
 	userRepo := infra.NewPostgresUserRepository(db)
 	passwordHasher := infra.NewBcryptPasswordHasher()
