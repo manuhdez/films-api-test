@@ -27,10 +27,13 @@ func New(db *sql.DB) Server {
 
 	userRepo := infra.NewPostgresUserRepository(db)
 	passwordHasher := infra.NewBcryptPasswordHasher()
+	tokenGenerator := infra.NewJWTGenerator()
 	userCreator := service.NewUserRegister(userRepo, passwordHasher)
+	userLogger := service.NewUserLogin(userRepo, passwordHasher)
 
 	api := e.Group("/api")
 	api.POST("/register", handler.NewRegisterUser(userCreator).Handle)
+	api.POST("/login", handler.NewLoginUser(userLogger, tokenGenerator).Handle)
 
 	return Server{
 		engine: e,
