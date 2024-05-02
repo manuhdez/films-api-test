@@ -23,7 +23,7 @@ func TestRegisterUser(t *testing.T) {
 
 	mockUser := factories.User()
 	body, marshalErr := json.Marshal(RegisterUserRequest{
-		Username: mockUser.Username,
+		Username: "m0cku5ern4me",
 		Password: mockUser.Password,
 	})
 	assert.NoError(t, marshalErr)

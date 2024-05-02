@@ -11,6 +11,9 @@ func User() user.User {
 	return user.User{
 		ID:       uuid.New(),
 		Username: faker.Internet().UserName(),
-		Password: faker.Internet().Password(6, 12),
+		Password: faker.Internet().Password(
+			user.PasswordMinLength,
+			user.PasswordMaxLength,
+		),
 	}
 }

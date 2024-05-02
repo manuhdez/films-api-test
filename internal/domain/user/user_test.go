@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"syreclabs.com/go/faker"
@@ -26,7 +25,6 @@ func TestUser_ensureValidUsername(t *testing.T) {
 	} {
 		t.Run(test.Name, func(t *testing.T) {
 			got := ensureValidUsername(test.Input)
-			fmt.Println("from:", test.Input, "got:", got)
 			if !errors.Is(got, test.Expected) {
 				t.Errorf("got %v, expected %v", got, test.Expected)
 			}
