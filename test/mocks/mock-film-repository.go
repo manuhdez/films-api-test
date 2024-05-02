@@ -1,0 +1,18 @@
+package mocks
+
+import (
+	"context"
+
+	"github.com/stretchr/testify/mock"
+
+	"github.com/manuhdez/films-api-test/internal/domain/film"
+)
+
+type MockFilmRepository struct {
+	mock.Mock
+}
+
+func (m *MockFilmRepository) All(c context.Context) ([]film.Film, error) {
+	args := m.Called(c)
+	return args.Get(0).([]film.Film), args.Error(1)
+}
