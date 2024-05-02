@@ -53,3 +53,26 @@ func (r *PostgresUserRepository) Save(c context.Context, u user.User) (user.User
 
 	return u, nil
 }
+
+func (r *PostgresUserRepository) SearchByUsername(c context.Context, username string) (user.User, error) {
+	query := `SELECT * FROM users WHERE username = $1`
+	row := r.db.QueryRowContext(c, query, username)
+
+	if row.Err() != nil {
+		slog.Error("failed to search user by username", "username", username, "err", row.Err())
+		return user.User{}, row.Err()
+	}
+
+	var u PostgresUser
+	scanErr := row.Scan(&u.ID, &u.Username, &u.Password)
+	if scanErr != nil {
+		if errors.Is(scanErr, sql.ErrNoRows) {
+			return user.User{}, ErrUsernameNotFound
+		}
+
+		slog.Error("failed to scan user row", "username", username, "err", scanErr)
+		return user.User{}, scanErr
+	}
+
+	return user.User{ID: u.ID, Username: u.Username, Password: u.Password}, nil
+}

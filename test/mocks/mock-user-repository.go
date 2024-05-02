@@ -16,3 +16,8 @@ func (m *MockUserRepository) Save(c context.Context, u user.User) (user.User, er
 	args := m.Called(c, u)
 	return args.Get(0).(user.User), args.Error(1)
 }
+
+func (m *MockUserRepository) SearchByUsername(c context.Context, username string) (user.User, error) {
+	args := m.Called(c, username)
+	return args.Get(0).(user.User), args.Error(1)
+}
