@@ -6,6 +6,8 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/google/uuid"
+
 	"github.com/manuhdez/films-api-test/internal/domain/film"
 )
 
@@ -58,4 +60,25 @@ func (r *PostgresFilmRepository) All(c context.Context) ([]film.Film, error) {
 	}
 
 	return films, nil
+}
+
+func (r *PostgresFilmRepository) Find(c context.Context, id uuid.UUID) (film.Film, error) {
+	query := `SELECT id, title, director, release_date, genre, synopsis, casting, created_by FROM films WHERE id = $1`
+
+	row := r.db.QueryRowContext(c, query, id)
+	if row.Err() != nil {
+		slog.Error("film not found", "id", id.String())
+		return film.Film{}, row.Err()
+	}
+
+	var f PostgresFilm
+	scanErr := row.Scan(&f.ID, &f.Title, &f.Director, &f.ReleaseDate, &f.Genre, &f.Synopsis, &f.Casting, &f.CreatedBy)
+	if scanErr != nil {
+		if errors.Is(scanErr, sql.ErrNoRows) {
+			slog.Error("film not found, empty row value", "id", id.String())
+		}
+		return film.Film{}, scanErr
+	}
+
+	return f.ToDomain(), nil
 }

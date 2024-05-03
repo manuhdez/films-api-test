@@ -1,7 +1,12 @@
 package film
 
-import "context"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type Repository interface {
 	All(ctx context.Context) ([]Film, error)
+	Find(ctx context.Context, id uuid.UUID) (Film, error)
 }
