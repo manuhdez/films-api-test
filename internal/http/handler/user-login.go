@@ -40,15 +40,15 @@ func (h LoginUser) Handle(c echo.Context) error {
 	user, err := h.loginService.Login(req.Username, req.Password)
 	if err != nil {
 		if errors.Is(err, service.ErrWrongCredentials) {
-			return c.JSON(http.StatusUnprocessableEntity, echo.Map{"error": err.Error()})
+			return c.JSON(http.StatusUnprocessableEntity, NewErrorResponse(err))
 		}
 
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse(err))
 	}
 
 	token, tokenErr := h.tokenService.Generate(user.ID.String())
 	if tokenErr != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": tokenErr.Error()})
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse(tokenErr))
 	}
 
 	return c.JSON(http.StatusOK, LoginResponse{

@@ -33,12 +33,12 @@ func NewRegisterUser(registerService service.UserRegister) RegisterUser {
 func (h RegisterUser) Handle(c echo.Context) error {
 	var req RegisterUserRequest
 	if bindErr := c.Bind(&req); bindErr != nil {
-		return c.String(http.StatusBadRequest, bindErr.Error())
+		return c.JSON(http.StatusBadRequest, NewErrorResponse(bindErr))
 	}
 
 	newUser, userErr := user.Create(req.Username, req.Password)
 	if userErr != nil {
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, userErr.Error())
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, NewErrorResponse(userErr))
 	}
 
 	usr, registerErr := h.registerService.Register(context.Background(), newUser)
@@ -51,8 +51,8 @@ func (h RegisterUser) Handle(c echo.Context) error {
 
 func handleRegisterError(err error) error {
 	if errors.Is(err, infra.ErrUsernameAlreadyInUse) {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, NewErrorResponse(err))
 	}
 
-	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	return echo.NewHTTPError(http.StatusInternalServerError, NewErrorResponse(err))
 }
