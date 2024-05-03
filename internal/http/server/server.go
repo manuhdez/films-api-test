@@ -38,10 +38,13 @@ func New(db *sql.DB) Server {
 
 	filmRepo := infra.NewPostgresFilmRepository(db)
 	filmsGetter := service.NewFilmsGetter(filmRepo)
+	filmFinder := service.NewFilmFinder(filmRepo)
 	authMiddleware := echojwt.JWT([]byte(os.Getenv("JWT_SECRET_KEY")))
 
 	films := api.Group("/films")
-	films.GET("", handler.NewGetFilms(filmsGetter).Handle, authMiddleware)
+	films.Use(authMiddleware)
+	films.GET("", handler.NewGetFilms(filmsGetter).Handle)
+	films.GET("/:id", handler.NewFindFilm(filmFinder).Handle)
 
 	return Server{
 		engine: e,

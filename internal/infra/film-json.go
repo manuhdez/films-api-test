@@ -1,6 +1,9 @@
 package infra
 
-import "github.com/manuhdez/films-api-test/internal/domain/film"
+import (
+	"github.com/google/uuid"
+	"github.com/manuhdez/films-api-test/internal/domain/film"
+)
 
 type FilmJSON struct {
 	ID          string   `json:"id"`
@@ -24,4 +27,11 @@ func NewFilmJSON(f film.Film) FilmJSON {
 		Synopsis:    f.Synopsis,
 		CreatedBy:   f.CreatedBy.String(),
 	}
+}
+
+func (f FilmJSON) ToDomain() film.Film {
+	id := uuid.MustParse(f.ID)
+	creator := uuid.MustParse(f.CreatedBy)
+
+	return film.New(id, f.Title, f.Director, f.ReleaseDate, f.Genre, f.Synopsis, f.Casting, creator)
 }
