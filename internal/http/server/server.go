@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
@@ -34,6 +35,13 @@ func New(db *sql.DB) Server {
 	api := e.Group("/api")
 	api.POST("/register", handler.NewRegisterUser(userCreator).Handle)
 	api.POST("/login", handler.NewLoginUser(userLogger, tokenGenerator).Handle)
+
+	filmRepo := infra.NewPostgresFilmRepository(db)
+	filmsGetter := service.NewFilmsGetter(filmRepo)
+	authMiddleware := echojwt.JWT([]byte(os.Getenv("JWT_SECRET_KEY")))
+
+	films := api.Group("/films")
+	films.GET("", handler.NewGetFilms(filmsGetter).Handle, authMiddleware)
 
 	return Server{
 		engine: e,
