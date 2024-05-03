@@ -84,13 +84,13 @@ logging and jwt which wil come in handy for this project.
 
 **User authentication**
 
-- [ ] Login endpoint
-- [ ] Register endpoint
+- [x] Login endpoint
+- [x] Register endpoint
 
 **Films endpoints**
 
-- [ ] List all films (without filters)
-- [ ] Get a film by id
+- [x] List all films (without filters)
+- [x] Get a film by id
 - [ ] Update a film
 - [ ] Delete a film
 - [ ] Custom filter for all films endpoint
