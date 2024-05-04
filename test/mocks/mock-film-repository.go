@@ -27,3 +27,8 @@ func (m *MockFilmRepository) Save(c context.Context, f film.Film) error {
 	args := m.Called(c, f)
 	return args.Error(0)
 }
+
+func (m *MockFilmRepository) Delete(c context.Context, id uuid.UUID) error {
+	args := m.Called(c, id)
+	return args.Error(0)
+}

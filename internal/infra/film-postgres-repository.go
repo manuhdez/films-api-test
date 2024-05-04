@@ -89,7 +89,8 @@ func (r *PostgresFilmRepository) Save(c context.Context, f film.Film) error {
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	casting := pq.Array(f.Casting)
-	_, insertErr := r.db.ExecContext(c,
+	_, insertErr := r.db.ExecContext(
+		c,
 		query,
 		f.ID,
 		f.Title,
@@ -98,9 +99,20 @@ func (r *PostgresFilmRepository) Save(c context.Context, f film.Film) error {
 		f.Genre,
 		f.Synopsis,
 		casting,
-		f.CreatedBy)
+		f.CreatedBy,
+	)
 	if insertErr != nil {
 		return insertErr
+	}
+
+	return nil
+}
+
+func (r *PostgresFilmRepository) Delete(c context.Context, id uuid.UUID) error {
+	query := `DELETE FROM films WHERE id = $1`
+	_, err := r.db.ExecContext(c, query, id)
+	if err != nil {
+		return err
 	}
 
 	return nil
