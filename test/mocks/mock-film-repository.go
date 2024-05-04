@@ -22,3 +22,8 @@ func (m *MockFilmRepository) Find(c context.Context, id uuid.UUID) (film.Film, e
 	args := m.Called(c, id)
 	return args.Get(0).(film.Film), args.Error(1)
 }
+
+func (m *MockFilmRepository) Save(c context.Context, f film.Film) (film.Film, error) {
+	args := m.Called(c, f)
+	return args.Get(0).(film.Film), args.Error(1)
+}
