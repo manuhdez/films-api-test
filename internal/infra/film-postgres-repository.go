@@ -84,15 +84,24 @@ func (r *PostgresFilmRepository) Find(c context.Context, id uuid.UUID) (film.Fil
 	return f.ToDomain(), nil
 }
 
-func (r *PostgresFilmRepository) Save(c context.Context, f film.Film) (film.Film, error) {
+func (r *PostgresFilmRepository) Save(c context.Context, f film.Film) error {
 	query := `INSERT INTO films (id, title, director, release_date, genre, synopsis, casting, created_by) 
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	casting := pq.Array(f.Casting)
-	_, insertErr := r.db.ExecContext(c, query, f.ID, f.Title, f.Director, f.ReleaseDate, f.Genre, f.Synopsis, casting, f.CreatedBy)
+	_, insertErr := r.db.ExecContext(c,
+		query,
+		f.ID,
+		f.Title,
+		f.Director,
+		f.ReleaseDate,
+		f.Genre,
+		f.Synopsis,
+		casting,
+		f.CreatedBy)
 	if insertErr != nil {
-		return film.Film{}, insertErr
+		return insertErr
 	}
 
-	return f, nil
+	return nil
 }
