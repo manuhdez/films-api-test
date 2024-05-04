@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/manuhdez/films-api-test/internal/http/handler"
+	middle "github.com/manuhdez/films-api-test/internal/http/middleware"
 	"github.com/manuhdez/films-api-test/internal/infra"
 	"github.com/manuhdez/films-api-test/internal/service"
 )
@@ -39,11 +40,13 @@ func New(db *sql.DB) Server {
 	filmRepo := infra.NewPostgresFilmRepository(db)
 	filmsGetter := service.NewFilmsGetter(filmRepo)
 	filmFinder := service.NewFilmFinder(filmRepo)
+	filmCreator := service.NewFilmCreator(filmRepo)
 	authMiddleware := echojwt.JWT([]byte(os.Getenv("JWT_SECRET_KEY")))
 
 	films := api.Group("/films")
 	films.Use(authMiddleware)
 	films.GET("", handler.NewGetFilms(filmsGetter).Handle)
+	films.POST("", handler.NewPostFilm(filmCreator).Handle, middle.LoggedUser)
 	films.GET("/:id", handler.NewFindFilm(filmFinder).Handle)
 
 	return Server{
