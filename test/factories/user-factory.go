@@ -17,3 +17,11 @@ func User() user.User {
 		),
 	}
 }
+
+func UserList(size int) []user.User {
+	var users []user.User
+	for range size {
+		users = append(users, User())
+	}
+	return users
+}

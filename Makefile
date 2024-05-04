@@ -31,3 +31,12 @@ migrate:
 
 rollback:
 	@make goose cmd="down"
+
+db-reset:
+	@make goose cmd="reset"
+
+db-status:
+	@make goose cmd="status"
+
+seed: db-reset migrate
+	@docker compose ps server --format '{{.Name}}' | xargs -I % docker exec % go run cmd/seed/main.go

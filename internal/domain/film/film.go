@@ -36,3 +36,16 @@ func New(
 		CreatedBy:   createdBy,
 	}
 }
+
+func Create(
+	title string,
+	director string,
+	year int,
+	genre string,
+	synopsis string,
+	casting []string,
+	createdBy uuid.UUID,
+) Film {
+	id := uuid.New()
+	return New(id, title, director, year, genre, synopsis, casting, createdBy)
+}
