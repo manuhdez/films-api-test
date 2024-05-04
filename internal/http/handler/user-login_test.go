@@ -17,6 +17,8 @@ import (
 )
 
 func TestLoginUser(t *testing.T) {
+	t.Parallel()
+
 	testUser := factories.User()
 
 	body, marshalErr := json.Marshal(UserLoginRequest{

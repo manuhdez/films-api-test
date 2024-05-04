@@ -20,6 +20,8 @@ import (
 )
 
 func TestFindFilm_Handle(t *testing.T) {
+	t.Parallel()
+
 	t.Run("returns a 200 code if the film is found", func(t *testing.T) {
 		testFilm := factories.Film()
 

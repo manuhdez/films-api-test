@@ -19,9 +19,10 @@ import (
 )
 
 func TestGetFilms(t *testing.T) {
-	e := echo.New()
+	t.Parallel()
 
 	t.Run("returns a list of films", func(t *testing.T) {
+		e := echo.New()
 		testFilms := factories.FilmList(5)
 		req := httptest.NewRequest(http.MethodGet, "/films", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -45,6 +46,7 @@ func TestGetFilms(t *testing.T) {
 	})
 
 	t.Run("returns error when repository fails", func(t *testing.T) {
+		e := echo.New()
 		req := httptest.NewRequest(http.MethodGet, "/films", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
