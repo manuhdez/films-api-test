@@ -7,7 +7,7 @@ tidy:
 	@go mod tidy
 
 test:
-	@go test ./...
+	@go test ./internal/...
 
 # Docker commands
 build:
