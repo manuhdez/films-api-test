@@ -93,5 +93,5 @@ logging and jwt which wil come in handy for this project.
 - [x] Get a film by id
 - [x] Create a film
 - [ ] Update a film
-- [ ] Delete a film
+- [x] Delete a film
 - [ ] Custom filter for all films endpoint

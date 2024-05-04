@@ -41,13 +41,15 @@ func New(db *sql.DB) Server {
 	filmsGetter := service.NewFilmsGetter(filmRepo)
 	filmFinder := service.NewFilmFinder(filmRepo)
 	filmCreator := service.NewFilmCreator(filmRepo)
+	filmDeleter := service.NewFilmDeleter(filmRepo)
 	authMiddleware := echojwt.JWT([]byte(os.Getenv("JWT_SECRET_KEY")))
 
 	films := api.Group("/films")
-	films.Use(authMiddleware)
+	films.Use(authMiddleware, middle.LoggedUser)
 	films.GET("", handler.NewGetFilms(filmsGetter).Handle)
-	films.POST("", handler.NewPostFilm(filmCreator).Handle, middle.LoggedUser)
+	films.POST("", handler.NewPostFilm(filmCreator).Handle)
 	films.GET("/:id", handler.NewFindFilm(filmFinder).Handle)
+	films.DELETE("/:id", handler.NewDeleteFilm(filmDeleter, filmFinder).Handle)
 
 	return Server{
 		engine: e,
