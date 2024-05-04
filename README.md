@@ -80,7 +80,7 @@ logging and jwt which wil come in handy for this project.
 
 - [x] Setup postgres database
 - [x] Setup database migrations
-- [ ] Setup database seeding
+- [x] Setup database seeding
 
 **User authentication**
 
@@ -91,6 +91,7 @@ logging and jwt which wil come in handy for this project.
 
 - [x] List all films (without filters)
 - [x] Get a film by id
+- [x] Create a film
 - [ ] Update a film
 - [ ] Delete a film
 - [ ] Custom filter for all films endpoint
