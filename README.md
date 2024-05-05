@@ -90,8 +90,8 @@ logging and jwt which wil come in handy for this project.
 **Films endpoints**
 
 - [x] List all films (without filters)
+  - [ ] Custom filter
 - [x] Get a film by id
 - [x] Create a film
-- [ ] Update a film
+- [x] Update a film
 - [x] Delete a film
-- [ ] Custom filter for all films endpoint
