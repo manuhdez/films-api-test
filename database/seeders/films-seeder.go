@@ -14,6 +14,6 @@ func (s Seeder) SeedFilms(users []user.User) {
 	for _, u := range users {
 		f := factories.Film()
 		f.CreatedBy = u.ID
-		_, _ = s.repos.filmRepository.Save(context.Background(), f)
+		_ = s.repos.filmRepository.Save(context.Background(), f)
 	}
 }
