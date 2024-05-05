@@ -29,7 +29,7 @@ func FilmList(size int) []film.Film {
 }
 
 func filmCasting() []string {
-	size := faker.Number().Between(1, 5)
+	size := faker.RandomInt(1, 5)
 
 	var names []string
 	for range size {
