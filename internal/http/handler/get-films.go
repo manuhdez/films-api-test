@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/manuhdez/films-api-test/internal/domain/film"
 	"github.com/manuhdez/films-api-test/internal/infra"
 	"github.com/manuhdez/films-api-test/internal/service"
 )
@@ -18,14 +19,21 @@ func NewGetFilms(filmsGetter service.FilmsGetter) GetFilms {
 }
 
 func (h GetFilms) Handle(c echo.Context) error {
-	films, err := h.filmsGetter.Get()
+	filter := film.NewFilter(
+		c.QueryParam("title"),
+		c.QueryParam("director"),
+		c.QueryParam("genre"),
+		c.QueryParam("release_date"),
+	)
+
+	films, err := h.filmsGetter.Get(filter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, NewErrorResponse(err))
 	}
 
-	var jsonFilms []infra.FilmJSON
-	for _, film := range films {
-		jsonFilms = append(jsonFilms, infra.NewFilmJSON(film))
+	jsonFilms := make([]infra.FilmJSON, len(films))
+	for idx, f := range films {
+		jsonFilms[idx] = infra.NewFilmJSON(f)
 	}
 
 	return c.JSON(http.StatusOK, jsonFilms)

@@ -6,10 +6,15 @@ import (
 	"errors"
 	"log/slog"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 
 	"github.com/manuhdez/films-api-test/internal/domain/film"
+)
+
+var (
+	psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 )
 
 type PostgresFilmRepository struct {
@@ -20,15 +25,41 @@ func NewPostgresFilmRepository(db *sql.DB) *PostgresFilmRepository {
 	return &PostgresFilmRepository{db: db}
 }
 
-func (r *PostgresFilmRepository) All(c context.Context) ([]film.Film, error) {
-	query := `SELECT id, title, director, release_date, genre, synopsis, casting, created_by FROM films`
+func (r *PostgresFilmRepository) All(c context.Context, filter film.Filter) ([]film.Film, error) {
+	query := psql.Select("*").From("films")
 
-	rows, queryErr := r.db.QueryContext(c, query)
+	var params []interface{}
+	if filter.Title != "" {
+		query = query.Where("LOWER(title) = LOWER(?)")
+		params = append(params, filter.Title)
+	}
+	if filter.Director != "" {
+		query = query.Where("LOWER(director) = LOWER(?)")
+		params = append(params, filter.Director)
+	}
+	if filter.Genre != "" {
+		query = query.Where("LOWER(genre) = LOWER(?)")
+		params = append(params, filter.Genre)
+	}
+	if filter.ReleaseDate != 0 {
+		query = query.Where("release_date = ?")
+		params = append(params, filter.ReleaseDate)
+	}
+
+	sqlQuery, _, sqlErr := query.ToSql()
+	if sqlErr != nil {
+		slog.Error("failed to build get films query", "error", sqlErr.Error())
+		return []film.Film{}, sqlErr
+	}
+
+	rows, queryErr := r.db.QueryContext(c, sqlQuery, params...)
 	if queryErr != nil {
 		if errors.Is(queryErr, sql.ErrNoRows) {
-			slog.Info("no films found")
+			slog.Error("no films to return")
 			return []film.Film{}, nil
 		}
+
+		slog.Error("failed to execute query", "error", queryErr)
 		return nil, queryErr
 	}
 
@@ -38,14 +69,7 @@ func (r *PostgresFilmRepository) All(c context.Context) ([]film.Film, error) {
 	for rows.Next() {
 		var f PostgresFilm
 		scanErr := rows.Scan(
-			&f.ID,
-			&f.Title,
-			&f.Director,
-			&f.ReleaseDate,
-			&f.Genre,
-			&f.Synopsis,
-			&f.Casting,
-			&f.CreatedBy,
+			&f.ID, &f.Title, &f.Director, &f.ReleaseDate, &f.Casting, &f.Genre, &f.Synopsis, &f.CreatedBy,
 		)
 
 		if scanErr != nil {
@@ -64,16 +88,22 @@ func (r *PostgresFilmRepository) All(c context.Context) ([]film.Film, error) {
 }
 
 func (r *PostgresFilmRepository) Find(c context.Context, id uuid.UUID) (film.Film, error) {
-	query := `SELECT id, title, director, release_date, genre, synopsis, casting, created_by FROM films WHERE id = $1`
+	query := psql.Select("*").From("films").Where(sq.Eq{"id": id})
 
-	row := r.db.QueryRowContext(c, query, id)
+	sqlQuery, _, sqlErr := query.ToSql()
+	if sqlErr != nil {
+		slog.Error("failed to build get films query", "error", sqlErr.Error())
+		return film.Film{}, sqlErr
+	}
+
+	row := r.db.QueryRowContext(c, sqlQuery, id)
 	if row.Err() != nil {
 		slog.Error("film not found", "id", id.String())
 		return film.Film{}, row.Err()
 	}
 
 	var f PostgresFilm
-	scanErr := row.Scan(&f.ID, &f.Title, &f.Director, &f.ReleaseDate, &f.Genre, &f.Synopsis, &f.Casting, &f.CreatedBy)
+	scanErr := row.Scan(&f.ID, &f.Title, &f.Director, &f.ReleaseDate, &f.Casting, &f.Genre, &f.Synopsis, &f.CreatedBy)
 	if scanErr != nil {
 		if errors.Is(scanErr, sql.ErrNoRows) {
 			slog.Error("film not found, empty row value", "id", id.String())
@@ -85,23 +115,20 @@ func (r *PostgresFilmRepository) Find(c context.Context, id uuid.UUID) (film.Fil
 }
 
 func (r *PostgresFilmRepository) Save(c context.Context, f film.Film) error {
-	query := `INSERT INTO films (id, title, director, release_date, genre, synopsis, casting, created_by) 
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	query, _, err := psql.Insert("films").Columns(
+		"id", "title", "director", "release_date", "genre", "synopsis", "casting", "created_by",
+	).Values("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8").ToSql()
 
-	casting := pq.Array(f.Casting)
+	if err != nil {
+		slog.Error("failed to build sql query", "error", err.Error())
+		return err
+	}
+
 	_, insertErr := r.db.ExecContext(
-		c,
-		query,
-		f.ID,
-		f.Title,
-		f.Director,
-		f.ReleaseDate,
-		f.Genre,
-		f.Synopsis,
-		casting,
-		f.CreatedBy,
+		c, query, f.ID, f.Title, f.Director, f.ReleaseDate, f.Genre, f.Synopsis, pq.Array(f.Casting), f.CreatedBy,
 	)
 	if insertErr != nil {
+		slog.Error("failed to insert film", "error", insertErr.Error())
 		return insertErr
 	}
 
@@ -109,7 +136,12 @@ func (r *PostgresFilmRepository) Save(c context.Context, f film.Film) error {
 }
 
 func (r *PostgresFilmRepository) Delete(c context.Context, id uuid.UUID) error {
-	query := `DELETE FROM films WHERE id = $1`
+	query, _, queryErr := psql.Delete("films").Where(sq.Eq{"id": id}).ToSql()
+	if queryErr != nil {
+		slog.Error("failed to build sql query", "error", queryErr.Error())
+		return queryErr
+	}
+
 	_, err := r.db.ExecContext(c, query, id)
 	if err != nil {
 		return err
@@ -119,13 +151,32 @@ func (r *PostgresFilmRepository) Delete(c context.Context, id uuid.UUID) error {
 }
 
 func (r *PostgresFilmRepository) Update(c context.Context, f film.Film) error {
-	query := `
-	UPDATE films
-	SET title = $1, director = $2, release_date = $3, genre = $4, synopsis = $5, casting = $6
-	WHERE id = $7`
+	query, _, queryErr := psql.Update("films").SetMap(map[string]interface{}{
+		"title":        f.Title,
+		"director":     f.Director,
+		"release_date": f.ReleaseDate,
+		"genre":        f.Genre,
+		"synopsis":     f.Synopsis,
+		"casting":      f.Casting,
+	}).Where(sq.Eq{"id": f.ID}).ToSql()
+
+	slog.Info("update film query", "query", query)
+
+	if queryErr != nil {
+		slog.Error("failed to build sql query", "error", queryErr.Error())
+		return queryErr
+	}
 
 	casting := pq.Array(f.Casting)
-	_, err := r.db.ExecContext(c, query, f.Title, f.Director, f.ReleaseDate, f.Genre, f.Synopsis, casting, f.ID)
+	_, err := r.db.ExecContext(c,
+		query,
+		casting,
+		f.Director,
+		f.Genre,
+		f.ReleaseDate,
+		f.Synopsis,
+		f.Title,
+		f.ID)
 	if err != nil {
 		slog.Error("failed to update film", "film", f.ID.String(), "error", err)
 		return err

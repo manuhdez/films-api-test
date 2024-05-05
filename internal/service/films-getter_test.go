@@ -12,14 +12,16 @@ import (
 )
 
 func TestFilmsGetter(t *testing.T) {
-	testFilms := factories.FilmList(5)
+	t.Parallel()
 
 	t.Run("returns a list of films", func(t *testing.T) {
 		repo := new(mocks.MockFilmRepository)
 		getter := NewFilmsGetter(repo)
-		repo.On("All", mock.Anything).Return(testFilms, nil).Once()
+		testFilms := factories.FilmList(5)
+		repo.On("All", mock.Anything, mock.Anything).Return(testFilms, nil).Once()
 
-		films, err := getter.Get()
+		filter := film.Filter{}
+		films, err := getter.Get(filter)
 		assert.NoError(t, err)
 		assert.Equal(t, testFilms, films)
 		repo.AssertExpectations(t)
@@ -28,9 +30,10 @@ func TestFilmsGetter(t *testing.T) {
 	t.Run("returns error if films cannot be read", func(t *testing.T) {
 		repo := new(mocks.MockFilmRepository)
 		getter := NewFilmsGetter(repo)
-		repo.On("All", mock.Anything).Return([]film.Film{}, ErrUnableToGetFilms).Once()
+		repo.On("All", mock.Anything, mock.Anything).Return([]film.Film{}, ErrUnableToGetFilms).Once()
 
-		_, err := getter.Get()
+		filter := film.Filter{}
+		_, err := getter.Get(filter)
 		assert.ErrorIs(t, err, ErrUnableToGetFilms)
 		repo.AssertExpectations(t)
 	})

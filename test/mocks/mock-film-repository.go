@@ -13,8 +13,8 @@ type MockFilmRepository struct {
 	mock.Mock
 }
 
-func (m *MockFilmRepository) All(c context.Context) ([]film.Film, error) {
-	args := m.Called(c)
+func (m *MockFilmRepository) All(c context.Context, filter film.Filter) ([]film.Film, error) {
+	args := m.Called(c, filter)
 	return args.Get(0).([]film.Film), args.Error(1)
 }
 

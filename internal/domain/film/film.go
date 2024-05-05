@@ -1,7 +1,14 @@
 package film
 
 import (
+	"errors"
+	"strconv"
+
 	"github.com/google/uuid"
+)
+
+var (
+	ErrInvalidFilterValues = errors.New("invalid filter values")
 )
 
 type Film struct {
@@ -48,4 +55,26 @@ func Create(
 ) Film {
 	id := uuid.New()
 	return New(id, title, director, year, genre, synopsis, casting, createdBy)
+}
+
+type Filter struct {
+	Title       string
+	Director    string
+	Genre       string
+	ReleaseDate int
+}
+
+func NewFilter(title, director, genre, releaseDate string) Filter {
+	filter := Filter{
+		Title:    title,
+		Director: director,
+		Genre:    genre,
+	}
+
+	year, err := strconv.Atoi(releaseDate)
+	if err == nil {
+		filter.ReleaseDate = year
+	}
+
+	return filter
 }

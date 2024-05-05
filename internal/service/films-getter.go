@@ -19,9 +19,9 @@ func NewFilmsGetter(repo film.Repository) FilmsGetter {
 	return FilmsGetter{repository: repo}
 }
 
-func (f FilmsGetter) Get() ([]film.Film, error) {
+func (f FilmsGetter) Get(filter film.Filter) ([]film.Film, error) {
 	ctx := context.Background()
-	films, err := f.repository.All(ctx)
+	films, err := f.repository.All(ctx, filter)
 	if err != nil {
 		return nil, ErrUnableToGetFilms
 	}

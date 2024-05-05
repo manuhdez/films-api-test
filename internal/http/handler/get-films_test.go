@@ -33,7 +33,7 @@ func TestGetFilms(t *testing.T) {
 		srv := service.NewFilmsGetter(repo)
 		handler := NewGetFilms(srv)
 
-		repo.On("All", mock.Anything).Return(testFilms, nil).Once()
+		repo.On("All", mock.Anything, mock.Anything).Return(testFilms, nil).Once()
 
 		err := handler.Handle(ctx)
 		assert.NoError(t, err)
@@ -56,7 +56,7 @@ func TestGetFilms(t *testing.T) {
 		srv := service.NewFilmsGetter(repo)
 		handler := NewGetFilms(srv)
 
-		repo.On("All", mock.Anything).Return([]film.Film{}, errors.New("something failed")).Once()
+		repo.On("All", mock.Anything, mock.Anything).Return([]film.Film{}, errors.New("something failed")).Once()
 
 		err := handler.Handle(ctx)
 		assert.NoError(t, err)
