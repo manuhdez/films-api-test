@@ -117,3 +117,19 @@ func (r *PostgresFilmRepository) Delete(c context.Context, id uuid.UUID) error {
 
 	return nil
 }
+
+func (r *PostgresFilmRepository) Update(c context.Context, f film.Film) error {
+	query := `
+	UPDATE films
+	SET title = $1, director = $2, release_date = $3, genre = $4, synopsis = $5, casting = $6
+	WHERE id = $7`
+
+	casting := pq.Array(f.Casting)
+	_, err := r.db.ExecContext(c, query, f.Title, f.Director, f.ReleaseDate, f.Genre, f.Synopsis, casting, f.ID)
+	if err != nil {
+		slog.Error("failed to update film", "film", f.ID.String(), "error", err)
+		return err
+	}
+
+	return nil
+}
