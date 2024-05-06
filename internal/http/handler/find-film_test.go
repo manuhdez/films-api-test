@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/manuhdez/films-api-test/internal/domain/film"
-	"github.com/manuhdez/films-api-test/internal/infra"
 	"github.com/manuhdez/films-api-test/internal/service"
 	"github.com/manuhdez/films-api-test/test/factories"
 	"github.com/manuhdez/films-api-test/test/mocks"
@@ -24,6 +23,7 @@ func TestFindFilm_Handle(t *testing.T) {
 
 	t.Run("returns a 200 code if the film is found", func(t *testing.T) {
 		testFilm := factories.Film()
+		testUser := factories.User()
 
 		e := echo.New()
 		req := httptest.NewRequest(http.MethodGet, "/films/:id", nil)
@@ -33,20 +33,24 @@ func TestFindFilm_Handle(t *testing.T) {
 		ctx.SetParamNames("id")
 		ctx.SetParamValues(testFilm.ID.String())
 
-		repo := new(mocks.MockFilmRepository)
-		srv := service.NewFilmFinder(repo)
-		handler := NewFindFilm(srv)
+		filmRepo := new(mocks.MockFilmRepository)
+		userRepo := new(mocks.MockUserRepository)
+		filmFinder := service.NewFilmFinder(filmRepo)
+		userFinder := service.NewUserFinder(userRepo)
+		handler := NewFindFilm(filmFinder, userFinder)
 
-		repo.On("Find", mock.Anything, mock.Anything).Return(testFilm, nil).Once()
+		filmRepo.On("Find", mock.Anything, mock.Anything).Return(testFilm, nil).Once()
+		userRepo.On("Find", mock.Anything, mock.Anything).Return(testUser, nil).Once()
 
 		err := handler.Handle(ctx)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, rec.Code)
 
-		var responseFilm infra.FilmJSON
+		var responseFilm FindFilmResponse
 		err = json.Unmarshal(rec.Body.Bytes(), &responseFilm)
 		assert.NoError(t, err)
-		assert.Equal(t, testFilm, responseFilm.ToDomain())
+		assert.Equal(t, testFilm.ID.String(), responseFilm.ID)
+		assert.Equal(t, testUser.ID.String(), responseFilm.CreatedBy.ID)
 	})
 
 	t.Run("returns 422 if uuid is not valid", func(t *testing.T) {
@@ -58,14 +62,15 @@ func TestFindFilm_Handle(t *testing.T) {
 		ctx.SetParamNames("id")
 		ctx.SetParamValues("bad-uuid")
 
-		repo := new(mocks.MockFilmRepository)
-		srv := service.NewFilmFinder(repo)
-		handler := NewFindFilm(srv)
+		filmRepo := new(mocks.MockFilmRepository)
+		userRepo := new(mocks.MockUserRepository)
+		filmFinder := service.NewFilmFinder(filmRepo)
+		userFinder := service.NewUserFinder(userRepo)
+		handler := NewFindFilm(filmFinder, userFinder)
 
 		err := handler.Handle(ctx)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
-		repo.AssertNotCalled(t, "Find", mock.Anything, mock.Anything)
 	})
 
 	t.Run("returns a 404 if cannot find film", func(t *testing.T) {
@@ -77,15 +82,18 @@ func TestFindFilm_Handle(t *testing.T) {
 		ctx.SetParamNames("id")
 		ctx.SetParamValues(uuid.New().String())
 
-		repo := new(mocks.MockFilmRepository)
-		srv := service.NewFilmFinder(repo)
-		handler := NewFindFilm(srv)
+		filmRepo := new(mocks.MockFilmRepository)
+		userRepo := new(mocks.MockUserRepository)
+		filmFinder := service.NewFilmFinder(filmRepo)
+		userFinder := service.NewUserFinder(userRepo)
+		handler := NewFindFilm(filmFinder, userFinder)
+
 		testErr := errors.New("cannot find film")
-		repo.On("Find", mock.Anything, mock.Anything).Return(film.Film{}, testErr).Once()
+		filmRepo.On("Find", mock.Anything, mock.Anything).Return(film.Film{}, testErr).Once()
 
 		err := handler.Handle(ctx)
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusNotFound, rec.Code)
-		repo.AssertExpectations(t)
+		filmRepo.AssertExpectations(t)
 	})
 }

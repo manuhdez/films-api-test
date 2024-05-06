@@ -32,10 +32,7 @@ func New(db *sql.DB) Server {
 	tokenGenerator := infra.NewJWTGenerator()
 	userCreator := service.NewUserRegister(userRepo, passwordHasher)
 	userLogger := service.NewUserLogin(userRepo, passwordHasher)
-
-	api := e.Group("/api")
-	api.POST("/register", handler.NewRegisterUser(userCreator).Handle)
-	api.POST("/login", handler.NewLoginUser(userLogger, tokenGenerator).Handle)
+	userFinder := service.NewUserFinder(userRepo)
 
 	filmRepo := infra.NewPostgresFilmRepository(db)
 	filmsGetter := service.NewFilmsGetter(filmRepo)
@@ -45,11 +42,16 @@ func New(db *sql.DB) Server {
 	filmUpdater := service.NewFilmUpdater(filmRepo)
 	authMiddleware := echojwt.JWT([]byte(os.Getenv("JWT_SECRET_KEY")))
 
+	api := e.Group("/api")
+
+	api.POST("/register", handler.NewRegisterUser(userCreator).Handle)
+	api.POST("/login", handler.NewLoginUser(userLogger, tokenGenerator).Handle)
+
 	films := api.Group("/films")
 	films.Use(authMiddleware, middle.LoggedUser)
 	films.GET("", handler.NewGetFilms(filmsGetter).Handle)
 	films.POST("", handler.NewPostFilm(filmCreator).Handle)
-	films.GET("/:id", handler.NewFindFilm(filmFinder).Handle)
+	films.GET("/:id", handler.NewFindFilm(filmFinder, userFinder).Handle)
 	films.DELETE("/:id", handler.NewDeleteFilm(filmDeleter, filmFinder).Handle)
 	films.PUT("/:id", handler.NewPutFilm(filmFinder, filmUpdater).Handle)
 

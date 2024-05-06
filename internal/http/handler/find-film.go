@@ -2,13 +2,11 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"github.com/manuhdez/films-api-test/internal/infra"
 	"github.com/manuhdez/films-api-test/internal/service"
 )
 
@@ -17,25 +15,61 @@ var (
 	ErrFilmNotFound = errors.New("film not found")
 )
 
-type FindFilm struct {
-	finder service.FilmFinder
+type FindFilmResponse struct {
+	ID          string                  `json:"id"`
+	Title       string                  `json:"title"`
+	Director    string                  `json:"director"`
+	ReleaseDate int                     `json:"release_date"`
+	Genre       string                  `json:"genre"`
+	Casting     []string                `json:"casting"`
+	Synopsis    string                  `json:"synopsis"`
+	CreatedBy   FindFilmResponseCreator `json:"created_by"`
 }
 
-func NewFindFilm(filmFinder service.FilmFinder) FindFilm {
-	return FindFilm{finder: filmFinder}
+type FindFilmResponseCreator struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+}
+
+type FindFilm struct {
+	filmFinder service.FilmFinder
+	userFinder service.UserFinder
+}
+
+func NewFindFilm(filmFinder service.FilmFinder, userFinder service.UserFinder) FindFilm {
+	return FindFilm{
+		filmFinder: filmFinder,
+		userFinder: userFinder,
+	}
 }
 
 func (h FindFilm) Handle(c echo.Context) error {
-	fmt.Println("id received", c.Param("id"))
 	id, idErr := uuid.Parse(c.Param("id"))
 	if idErr != nil {
 		return c.JSON(http.StatusUnprocessableEntity, NewErrorResponse(ErrInvalidID))
 	}
 
-	film, findErr := h.finder.Find(id)
+	film, findErr := h.filmFinder.Find(id)
 	if findErr != nil {
 		return c.JSON(http.StatusNotFound, NewErrorResponse(ErrFilmNotFound))
 	}
 
-	return c.JSON(http.StatusOK, infra.NewFilmJSON(film))
+	user, userErr := h.userFinder.Find(film.CreatedBy)
+	if userErr != nil {
+		return c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrFilmNotFound))
+	}
+
+	return c.JSON(http.StatusOK, FindFilmResponse{
+		ID:          film.ID.String(),
+		Title:       film.Title,
+		Director:    film.Director,
+		ReleaseDate: film.ReleaseDate,
+		Genre:       film.Genre,
+		Synopsis:    film.Synopsis,
+		Casting:     film.Casting,
+		CreatedBy: FindFilmResponseCreator{
+			ID:       user.ID.String(),
+			Username: user.Username,
+		},
+	})
 }
