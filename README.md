@@ -1,32 +1,104 @@
 # Films API test
 
-## Introduction
-
 This repository is part of a code assignment which goal is to build a REST API
 with Go that can handle user authentication with JWT and has endpoints to
 create, read, update and delete films.
 
+## Table of Contents
+- [Description](#description)
+- [Installation](#installation)
+- [Running the app](#running-the-app)
+- [Database migration](#database-migrations)
+- [Testing](#testing)
+- [Requirements](#requirements)
+
 ## Description
 
-This application will follow an approach based on Hexagonal Architecture
-dividing the code in three main layers
+The project follows an approach based on Hexagonal Architecture.
+To have aim fow low coupling and high testability.
 
-**Domain**
+For HTTP routing we decided to use [Echo](https://echo.labstack.com/docs) for its
+simplicity and flexibility. It also has built-in support for middleware and comes with some interesting pre-built ones such as
+logging and jwt which come in handy for this project.
 
-This includes the entities and business logic
+Database migrations are run using [Goose](https://github.com/pressly/goose) and sql migration files.
+Goose has a pretty simple yet powerful API that is perfect for easily creating and executing migrations 
 
-**Application (services)**
+## Installation
 
-This layer encapsulates the use cases of the application.
+> The following instructions take for granted you are on a MacOS machine.  
+> If that's not your case the steps you have to make to have the project running might differ.
 
-**Infrastructure**
+To be able to run and test the project locally, follow these steps:
 
-This is the outer layer where we implement the domain interfaces with third
-party vendors like the database.
+- Clone the repository on your local machine
+- Have `Homebrew` installed
+- Install go v1.22 `brew install go@1.22`
+  ```bash
+   brew install go@1.22
+   ```
+- Install docker
+  ```bash
+  brew install docker --cask
+  ```
+- Environment variables:  
+  Since this is a demonstration application, an `.env` file is included in the
+  repository. This file contains the environment variables required to configure
+  the application secrets and connection with the database and the db migration
+  tool (goose)
 
-For HTTP routing we are using [Echo](https://echo.labstack.com/docs) for its
-simplicity and flexibility. It has builting support for middleware such as
-logging and jwt which wil come in handy for this project.
+## Running the app
+
+By simply running the `setup` command the application will build and run the docker images, run the migrations and populate the database with some test data.
+```bash
+make setup
+```
+
+Once the application is built and running you can simply start and stop the application with
+```bash
+# starts the application containers
+make start
+
+# stops the application containers
+make stop
+```
+
+## Database migrations
+
+There are four main commands to work with migrations:
+
+- `migration`: Creates a new migration file with the name specified as an argument
+- `migrate`: Runs the migration files
+- `rollback`: Undo the last migration ran
+- `db-reset`: Undo all migrations and clears database contents
+
+```bash
+# creates a migration file prefixed with a timestamp
+make migration name="create_migration_file"
+
+make migrate
+
+make rollback
+
+make db-reset
+```
+
+There is also a command for seeding the database with test data.
+```bash
+make seed
+```
+
+What this command does is resets the database, reruns the migrations and then fills the database with random data.
+
+## Testing
+
+To run the application tests you can run:
+```bash
+make test
+```
+
+There are unit tests for the domain and service layers and end to end (with mocked access to database) for handlers.
+Due to timeframe limitations I did not add acceptance tests for the repositories.
 
 ## Requirements
 
@@ -65,6 +137,7 @@ logging and jwt which wil come in handy for this project.
     - The film should only be modified by the user who created it
 
   - Delete a film:
+
     - The film should only be removed by the user who created it
 
 ## Tasks
@@ -89,9 +162,8 @@ logging and jwt which wil come in handy for this project.
 
 **Films endpoints**
 
-- [x] List all films (without filters)
-  - [ ] Custom filter
-- [x] Get a film by id
+- [x] List all films: can filter via query params
+- [x] Get a film by id: Includes creator user
 - [x] Create a film
 - [x] Update a film
 - [x] Delete a film
