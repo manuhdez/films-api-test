@@ -1,5 +1,8 @@
 .PHONY: dev test
 
+setup: build start seed
+	@echo "Application is setup and running 🚀"
+
 format:
 	@gofmt -w .
 
