@@ -29,7 +29,9 @@ func (df DeleteFilm) Handle(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, NewErrorResponse(ErrInvalidID))
 	}
 
-	film, findErr := df.finder.Find(filmID)
+	ctx := c.Request().Context()
+
+	film, findErr := df.finder.Find(ctx, filmID)
 	if findErr != nil {
 		return c.JSON(http.StatusNotFound, NewErrorResponse(ErrFilmNotFound))
 	}
@@ -39,7 +41,7 @@ func (df DeleteFilm) Handle(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, NewErrorResponse(ErrUnauthorized))
 	}
 
-	deleteErr := df.deleter.Delete(filmID)
+	deleteErr := df.deleter.Delete(ctx, filmID)
 	if deleteErr != nil {
 		return c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrCannotDeleteFilm))
 	}

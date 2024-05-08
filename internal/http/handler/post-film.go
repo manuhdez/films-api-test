@@ -40,8 +40,10 @@ func (h PostFilm) Handle(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, NewErrorResponse(ErrUnauthorized))
 	}
 
+	ctx := c.Request().Context()
 	f := film.Create(req.Title, req.Director, req.ReleaseDate, req.Genre, req.Synopsis, req.Casting, userID)
-	createErr := h.creator.Create(f)
+
+	createErr := h.creator.Create(ctx, f)
 	if createErr != nil {
 		return c.JSON(http.StatusInternalServerError, NewErrorResponse(createErr))
 	}

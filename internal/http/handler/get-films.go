@@ -26,7 +26,8 @@ func (h GetFilms) Handle(c echo.Context) error {
 		c.QueryParam("release_date"),
 	)
 
-	films, err := h.filmsGetter.Get(filter)
+	ctx := c.Request().Context()
+	films, err := h.filmsGetter.Get(ctx, filter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, NewErrorResponse(err))
 	}

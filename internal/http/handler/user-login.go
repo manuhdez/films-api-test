@@ -37,7 +37,8 @@ func (h LoginUser) Handle(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": bindErr.Error()})
 	}
 
-	user, err := h.loginService.Login(req.Username, req.Password)
+	ctx := c.Request().Context()
+	user, err := h.loginService.Login(ctx, req.Username, req.Password)
 	if err != nil {
 		if errors.Is(err, service.ErrWrongCredentials) {
 			return c.JSON(http.StatusUnprocessableEntity, NewErrorResponse(err))

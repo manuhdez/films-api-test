@@ -22,7 +22,7 @@ func TestUserLogin(t *testing.T) {
 		repo.On("SearchByUsername", ctx, credentials.Username).Return(credentials, nil)
 		hasher.On("Compare", mock.Anything, credentials.Password).Return(true)
 
-		u, err := logger.Login(credentials.Username, credentials.Password)
+		u, err := logger.Login(ctx, credentials.Username, credentials.Password)
 		assert.NoError(t, err)
 		assert.Equal(t, credentials, u)
 
@@ -39,7 +39,7 @@ func TestUserLogin(t *testing.T) {
 		credentials := user.User{Username: "username", Password: "password"}
 		repo.On("SearchByUsername", ctx, credentials.Username).Return(credentials, ErrWrongCredentials)
 
-		_, err := logger.Login(credentials.Username, credentials.Password)
+		_, err := logger.Login(ctx, credentials.Username, credentials.Password)
 		assert.ErrorIs(t, err, ErrWrongCredentials)
 
 		repo.AssertExpectations(t)
@@ -55,7 +55,7 @@ func TestUserLogin(t *testing.T) {
 		repo.On("SearchByUsername", ctx, credentials.Username).Return(credentials, nil)
 		hasher.On("Compare", mock.Anything, credentials.Password).Return(false)
 
-		_, err := logger.Login(credentials.Username, credentials.Password)
+		_, err := logger.Login(ctx, credentials.Username, credentials.Password)
 		assert.ErrorIs(t, err, ErrWrongCredentials)
 
 		repo.AssertExpectations(t)

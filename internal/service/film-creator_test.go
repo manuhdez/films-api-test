@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -21,7 +22,7 @@ func TestFilmCreator_Create(t *testing.T) {
 		testFilm := factories.Film()
 		repo.On("Save", mock.Anything, testFilm).Return(nil).Once()
 
-		err := creator.Create(testFilm)
+		err := creator.Create(context.Background(), testFilm)
 		assert.NoError(t, err)
 		repo.AssertExpectations(t)
 	})
@@ -34,7 +35,7 @@ func TestFilmCreator_Create(t *testing.T) {
 		testErr := errors.New("cannot save film")
 		repo.On("Save", mock.Anything, testFilm).Return(testErr).Once()
 
-		err := creator.Create(testFilm)
+		err := creator.Create(context.Background(), testFilm)
 		assert.Error(t, err)
 		repo.AssertExpectations(t)
 	})

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
@@ -41,7 +40,8 @@ func (h RegisterUser) Handle(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, NewErrorResponse(userErr))
 	}
 
-	usr, registerErr := h.registerService.Register(context.Background(), newUser)
+	ctx := c.Request().Context()
+	usr, registerErr := h.registerService.Register(ctx, newUser)
 	if registerErr != nil {
 		return handleRegisterError(registerErr)
 	}

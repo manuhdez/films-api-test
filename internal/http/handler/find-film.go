@@ -49,12 +49,13 @@ func (h FindFilm) Handle(c echo.Context) error {
 		return c.JSON(http.StatusUnprocessableEntity, NewErrorResponse(ErrInvalidID))
 	}
 
-	film, findErr := h.filmFinder.Find(id)
+	ctx := c.Request().Context()
+	film, findErr := h.filmFinder.Find(ctx, id)
 	if findErr != nil {
 		return c.JSON(http.StatusNotFound, NewErrorResponse(ErrFilmNotFound))
 	}
 
-	user, userErr := h.userFinder.Find(film.CreatedBy)
+	user, userErr := h.userFinder.Find(ctx, film.CreatedBy)
 	if userErr != nil {
 		return c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrFilmNotFound))
 	}

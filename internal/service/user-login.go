@@ -24,9 +24,8 @@ func NewUserLogin(r user.Repository, h PasswordHasher) UserLogin {
 	}
 }
 
-func (srv UserLogin) Login(username, password string) (user.User, error) {
-	c := context.Background()
-	u, searchErr := srv.repository.SearchByUsername(c, username)
+func (srv UserLogin) Login(ctx context.Context, username, password string) (user.User, error) {
+	u, searchErr := srv.repository.SearchByUsername(ctx, username)
 	if searchErr != nil {
 		if errors.Is(searchErr, infra.ErrUsernameNotFound) {
 			return user.User{}, ErrWrongCredentials

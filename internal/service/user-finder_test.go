@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -23,7 +24,7 @@ func TestUserFinder_Find(t *testing.T) {
 		fakeUser := factories.User()
 		repo.On("Find", mock.Anything, mock.Anything).Return(fakeUser, nil)
 
-		usr, err := finder.Find(fakeUser.ID)
+		usr, err := finder.Find(context.Background(), fakeUser.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, fakeUser, usr)
 		repo.AssertExpectations(t)
@@ -35,7 +36,7 @@ func TestUserFinder_Find(t *testing.T) {
 
 		repo.On("Find", mock.Anything, mock.Anything).Return(user.User{}, errors.New("not found"))
 
-		_, err := finder.Find(uuid.New())
+		_, err := finder.Find(context.Background(), uuid.New())
 		assert.ErrorIs(t, err, ErrUserNotFound)
 		repo.AssertExpectations(t)
 	})

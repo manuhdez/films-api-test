@@ -22,8 +22,7 @@ func NewUserFinder(repository user.Repository) UserFinder {
 	return UserFinder{repository: repository}
 }
 
-func (f UserFinder) Find(id uuid.UUID) (user.User, error) {
-	ctx := context.Background()
+func (f UserFinder) Find(ctx context.Context, id uuid.UUID) (user.User, error) {
 	u, err := f.repository.Find(ctx, id)
 	if err != nil {
 		slog.Error("failed to find user", "id", id.String(), "err", err.Error())

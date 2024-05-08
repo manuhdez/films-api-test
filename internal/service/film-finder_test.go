@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ func TestFilmFinder_Find(t *testing.T) {
 		repo.On("Find", mock.Anything, mock.Anything).Return(testFilm, nil)
 
 		id := uuid.New()
-		f, err := finder.Find(id)
+		f, err := finder.Find(context.Background(), id)
 		assert.NoError(t, err)
 		assert.Equal(t, f, testFilm)
 		repo.AssertExpectations(t)
@@ -35,7 +36,7 @@ func TestFilmFinder_Find(t *testing.T) {
 		repo.On("Find", mock.Anything, mock.Anything).Return(film.Film{}, ErrFilmNotFound)
 
 		id := uuid.New()
-		_, err := finder.Find(id)
+		_, err := finder.Find(context.Background(), id)
 		assert.ErrorIs(t, err, ErrFilmNotFound)
 		repo.AssertExpectations(t)
 	})

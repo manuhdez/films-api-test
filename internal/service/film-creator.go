@@ -15,8 +15,7 @@ func NewFilmCreator(r film.Repository) FilmCreator {
 	return FilmCreator{repository: r}
 }
 
-func (fc FilmCreator) Create(f film.Film) error {
-	ctx := context.Background()
+func (fc FilmCreator) Create(ctx context.Context, f film.Film) error {
 	err := fc.repository.Save(ctx, f)
 	if err != nil {
 		return errors.New("failed to save film")

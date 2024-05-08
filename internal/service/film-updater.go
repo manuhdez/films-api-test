@@ -19,8 +19,7 @@ func NewFilmUpdater(repo film.Repository) FilmUpdater {
 	return FilmUpdater{repo: repo}
 }
 
-func (f FilmUpdater) Update(film film.Film) error {
-	ctx := context.Background()
+func (f FilmUpdater) Update(ctx context.Context, film film.Film) error {
 	err := f.repo.Update(ctx, film)
 	if err != nil {
 		return ErrCannotUpdateFilm

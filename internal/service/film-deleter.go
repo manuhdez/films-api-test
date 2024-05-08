@@ -21,8 +21,7 @@ func NewFilmDeleter(r film.Repository) FilmDeleter {
 	return FilmDeleter{repository: r}
 }
 
-func (d FilmDeleter) Delete(filmID uuid.UUID) error {
-	ctx := context.Background()
+func (d FilmDeleter) Delete(ctx context.Context, filmID uuid.UUID) error {
 	err := d.repository.Delete(ctx, filmID)
 	if err != nil {
 		return ErrCannotDeleteFilm

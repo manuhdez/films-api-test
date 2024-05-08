@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -18,7 +19,7 @@ func TestFilmUpdater_Update(t *testing.T) {
 		repo.On("Update", mock.Anything, mock.Anything).Return(nil).Once()
 
 		testFilm := factories.Film()
-		err := updater.Update(testFilm)
+		err := updater.Update(context.Background(), testFilm)
 		assert.NoError(t, err)
 		repo.AssertExpectations(t)
 	})
@@ -29,7 +30,7 @@ func TestFilmUpdater_Update(t *testing.T) {
 		repo.On("Update", mock.Anything, mock.Anything).Return(errors.New("failed")).Once()
 
 		testFilm := factories.Film()
-		err := updater.Update(testFilm)
+		err := updater.Update(context.Background(), testFilm)
 		assert.ErrorIs(t, err, ErrCannotUpdateFilm)
 		repo.AssertExpectations(t)
 	})

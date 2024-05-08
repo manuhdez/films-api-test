@@ -18,12 +18,12 @@ func NewUserRegister(r user.Repository, h PasswordHasher) UserRegister {
 	}
 }
 
-func (r UserRegister) Register(c context.Context, u user.User) (user.User, error) {
+func (r UserRegister) Register(ctx context.Context, u user.User) (user.User, error) {
 	hashed, err := r.hasher.Hash(u.Password)
 	if err != nil {
 		return user.User{}, err
 	}
 
 	u.Password = hashed
-	return r.repository.Save(c, u)
+	return r.repository.Save(ctx, u)
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/uuid"
@@ -18,7 +19,7 @@ func TestFilmDeleter_Delete(t *testing.T) {
 		deleter := NewFilmDeleter(repo)
 		repo.On("Delete", mock.Anything, mock.Anything).Return(nil).Once()
 
-		err := deleter.Delete(uuid.New())
+		err := deleter.Delete(context.Background(), uuid.New())
 		assert.NoError(t, err)
 		repo.AssertExpectations(t)
 	})
@@ -28,7 +29,7 @@ func TestFilmDeleter_Delete(t *testing.T) {
 		deleter := NewFilmDeleter(repo)
 		repo.On("Delete", mock.Anything, mock.Anything).Return(ErrCannotDeleteFilm).Once()
 
-		err := deleter.Delete(uuid.New())
+		err := deleter.Delete(context.Background(), uuid.New())
 		assert.ErrorIs(t, err, ErrCannotDeleteFilm)
 		repo.AssertExpectations(t)
 	})

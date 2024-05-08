@@ -40,7 +40,8 @@ func (h PutFilm) Handle(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, NewErrorResponse(ErrInvalidID))
 	}
 
-	f, findErr := h.finder.Find(filmID)
+	ctx := c.Request().Context()
+	f, findErr := h.finder.Find(ctx, filmID)
 	if findErr != nil {
 		return c.JSON(http.StatusNotFound, NewErrorResponse(ErrFilmNotFound))
 	}
@@ -68,7 +69,7 @@ func (h PutFilm) Handle(c echo.Context) error {
 		f.CreatedBy,
 	)
 
-	err := h.updater.Update(updated)
+	err := h.updater.Update(ctx, updated)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrUpdatingFilm))
 	}

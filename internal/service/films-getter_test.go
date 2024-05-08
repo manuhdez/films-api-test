@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ func TestFilmsGetter(t *testing.T) {
 		repo.On("All", mock.Anything, mock.Anything).Return(testFilms, nil).Once()
 
 		filter := film.Filter{}
-		films, err := getter.Get(filter)
+		films, err := getter.Get(context.Background(), filter)
 		assert.NoError(t, err)
 		assert.Equal(t, testFilms, films)
 		repo.AssertExpectations(t)
@@ -33,7 +34,7 @@ func TestFilmsGetter(t *testing.T) {
 		repo.On("All", mock.Anything, mock.Anything).Return([]film.Film{}, ErrUnableToGetFilms).Once()
 
 		filter := film.Filter{}
-		_, err := getter.Get(filter)
+		_, err := getter.Get(context.Background(), filter)
 		assert.ErrorIs(t, err, ErrUnableToGetFilms)
 		repo.AssertExpectations(t)
 	})
