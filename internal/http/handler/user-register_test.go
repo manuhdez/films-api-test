@@ -10,6 +10,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/manuhdez/films-api-test/internal/domain/user"
 	"github.com/manuhdez/films-api-test/internal/service"
@@ -17,35 +19,66 @@ import (
 	"github.com/manuhdez/films-api-test/test/mocks"
 )
 
-func TestRegisterUser(t *testing.T) {
-	// Setup
-	e := echo.New()
+type RegisterUserSuite struct {
+	suite.Suite
+	recorder *httptest.ResponseRecorder
+	userRepo *mocks.MockUserRepository
+	hasher   *mocks.MockPasswordHasher
+	handler  RegisterUser
+}
 
-	mockUser := factories.User()
+func (suite *RegisterUserSuite) SetupTest() {
+	suite.recorder = httptest.NewRecorder()
+	suite.hasher = new(mocks.MockPasswordHasher)
+	suite.userRepo = new(mocks.MockUserRepository)
+	suite.handler = NewRegisterUser(
+		service.NewUserRegister(suite.userRepo, suite.hasher),
+	)
+}
+
+func (suite *RegisterUserSuite) TestRegisterValidUser() {
+	mockUser, userErr := user.Create("m0cku5ern4me", "validPassword")
+	require.NoError(suite.T(), userErr)
+
 	body, marshalErr := json.Marshal(RegisterUserRequest{
-		Username: "m0cku5ern4me",
+		Username: mockUser.Username,
 		Password: mockUser.Password,
 	})
-	assert.NoError(t, marshalErr)
+	require.NoError(suite.T(), marshalErr)
 
+	e := echo.New()
 	req := httptest.NewRequest(echo.POST, "/register", bytes.NewBuffer(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec := httptest.NewRecorder()
-	ctx := e.NewContext(req, rec)
+	ctx := e.NewContext(req, suite.recorder)
 
-	repo := new(mocks.MockUserRepository)
-	hasher := new(mocks.MockPasswordHasher)
-	srv := service.NewUserRegister(repo, hasher)
-	handler := NewRegisterUser(srv)
+	suite.hasher.On("Hash", mockUser.Password).Return(mockUser.Password, nil).Once()
+	suite.userRepo.On("Save", mock.Anything, mock.AnythingOfType("user.User")).Return(user.User{}, nil).Once()
+	err := suite.handler.Handle(ctx)
 
-	hasher.On("Hash", mockUser.Password).Return(mockUser.Password, nil).Once()
-	repo.On("Save", mock.Anything, mock.AnythingOfType("user.User")).Return(user.User{}, nil).Once()
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), http.StatusCreated, suite.recorder.Code)
+	suite.userRepo.AssertExpectations(suite.T())
+	suite.hasher.AssertExpectations(suite.T())
+}
 
-	// Assert
-	err := handler.Handle(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusCreated, rec.Code)
+func (suite *RegisterUserSuite) TestRegisterInvalidUser() {
+	mockUser := factories.User()
+	body, marshalErr := json.Marshal(RegisterUserRequest{
+		Username: "m0cku$ername",
+		Password: mockUser.Password,
+	})
+	require.NoError(suite.T(), marshalErr)
 
-	repo.AssertExpectations(t)
-	hasher.AssertExpectations(t)
+	e := echo.New()
+	req := httptest.NewRequest(echo.POST, "/register", bytes.NewBuffer(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx := e.NewContext(req, suite.recorder)
+
+	err := suite.handler.Handle(ctx)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), http.StatusBadRequest, suite.recorder.Code)
+}
+
+func TestRegisterUser(t *testing.T) {
+	suite.Run(t, new(RegisterUserSuite))
 }

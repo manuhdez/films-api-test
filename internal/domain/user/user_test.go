@@ -7,7 +7,7 @@ import (
 	"syreclabs.com/go/faker"
 )
 
-var testLongPassword = faker.Internet().Password(PasswordMaxLength, 50)
+var testLongPassword = faker.Internet().Password(PasswordMaxLength+1, 50)
 
 func TestUser_ensureValidUsername(t *testing.T) {
 	for _, test := range []struct {
