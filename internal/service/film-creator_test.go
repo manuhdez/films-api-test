@@ -17,10 +17,12 @@ func TestFilmCreator_Create(t *testing.T) {
 
 	t.Run("returns no error if film is created successfully", func(t *testing.T) {
 		repo := new(mocks.MockFilmRepository)
-		creator := NewFilmCreator(repo)
+		bus := new(mocks.MockEventBus)
+		creator := NewFilmCreator(repo, bus)
 
 		testFilm := factories.Film()
 		repo.On("Save", mock.Anything, testFilm).Return(nil).Once()
+		bus.On("Publish", mock.Anything, mock.Anything).Return(nil).Once()
 
 		err := creator.Create(context.Background(), testFilm)
 		assert.NoError(t, err)
@@ -29,7 +31,8 @@ func TestFilmCreator_Create(t *testing.T) {
 
 	t.Run("returns error if cannot create film", func(t *testing.T) {
 		repo := new(mocks.MockFilmRepository)
-		creator := NewFilmCreator(repo)
+		bus := new(mocks.MockEventBus)
+		creator := NewFilmCreator(repo, bus)
 
 		testFilm := factories.Film()
 		testErr := errors.New("cannot save film")

@@ -18,6 +18,10 @@ type PostgresFilm struct {
 	CreatedBy   uuid.UUID      `sql:"created_by"`
 }
 
+func (f PostgresFilm) TableName() string {
+	return "films"
+}
+
 func (f PostgresFilm) ToDomain() film.Film {
 	return film.New(
 		f.ID,
@@ -26,6 +30,34 @@ func (f PostgresFilm) ToDomain() film.Film {
 		f.ReleaseDate,
 		f.Genre,
 		f.Synopsis,
+		f.Casting,
+		f.CreatedBy,
+	)
+}
+
+type GormFilm struct {
+	ID          uuid.UUID `gorm:"uuid"`
+	Title       string    `gorm:""`
+	Director    string    ``
+	ReleaseDate int       ``
+	Genre       *string
+	Synopsis    *string
+	Casting     []string
+	CreatedBy   uuid.UUID
+}
+
+func (GormFilm) TableName() string {
+	return "films"
+}
+
+func (f GormFilm) ToDomain() film.Film {
+	return film.New(
+		f.ID,
+		f.Title,
+		f.Director,
+		f.ReleaseDate,
+		*f.Genre,
+		*f.Synopsis,
 		f.Casting,
 		f.CreatedBy,
 	)

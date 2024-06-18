@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -12,15 +13,17 @@ import (
 	"github.com/manuhdez/films-api-test/internal/http/handler"
 	middle "github.com/manuhdez/films-api-test/internal/http/middleware"
 	"github.com/manuhdez/films-api-test/internal/infra"
+	"github.com/manuhdez/films-api-test/internal/rabbit"
 	"github.com/manuhdez/films-api-test/internal/service"
 )
 
 type Server struct {
-	engine *echo.Echo
-	db     *sql.DB
+	engine   *echo.Echo
+	db       *sql.DB
+	eventBus rabbit.EventBus
 }
 
-func New(db *sql.DB) Server {
+func New(db *sql.DB, bus rabbit.EventBus) Server {
 	e := echo.New()
 
 	e.Use(middleware.Logger())
@@ -30,14 +33,14 @@ func New(db *sql.DB) Server {
 	userRepo := infra.NewPostgresUserRepository(db)
 	passwordHasher := infra.NewBcryptPasswordHasher()
 	tokenGenerator := infra.NewJWTGenerator()
-	userCreator := service.NewUserRegister(userRepo, passwordHasher)
+	userCreator := service.NewUserRegister(userRepo, passwordHasher, bus)
 	userLogger := service.NewUserLogin(userRepo, passwordHasher)
 	userFinder := service.NewUserFinder(userRepo)
 
 	filmRepo := infra.NewPostgresFilmRepository(db)
 	filmsGetter := service.NewFilmsGetter(filmRepo)
 	filmFinder := service.NewFilmFinder(filmRepo)
-	filmCreator := service.NewFilmCreator(filmRepo)
+	filmCreator := service.NewFilmCreator(filmRepo, bus)
 	filmDeleter := service.NewFilmDeleter(filmRepo)
 	filmUpdater := service.NewFilmUpdater(filmRepo)
 	authMiddleware := echojwt.JWT([]byte(os.Getenv("JWT_SECRET_KEY")))
@@ -68,4 +71,11 @@ func (s *Server) Start() error {
 	}
 
 	return s.engine.Start(fmt.Sprintf(":%s", port))
+}
+
+func (s *Server) Stop() {
+	err := s.engine.Close()
+	if err != nil {
+		log.Print("failed to close server", err)
+	}
 }

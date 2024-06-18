@@ -1,6 +1,6 @@
 .PHONY: dev test
 
-setup: build start seed
+setup: build start migrate seed
 	@echo "Application is setup and running 🚀"
 
 format:

@@ -4,11 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"log/slog"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"github.com/manuhdez/films-api-test/internal/domain/film"
 )
@@ -18,11 +21,20 @@ var (
 )
 
 type PostgresFilmRepository struct {
-	db *sql.DB
+	db  *sql.DB
+	gdb *gorm.DB
 }
 
 func NewPostgresFilmRepository(db *sql.DB) *PostgresFilmRepository {
-	return &PostgresFilmRepository{db: db}
+	gormDB, err := gorm.Open(
+		postgres.New(postgres.Config{Conn: db}),
+		&gorm.Config{},
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &PostgresFilmRepository{db: db, gdb: gormDB}
 }
 
 func (r *PostgresFilmRepository) All(c context.Context, filter film.Filter) ([]film.Film, error) {

@@ -42,10 +42,12 @@ func TestPostFilm_Handle(t *testing.T) {
 		ctx.Set("userID", uuid.New())
 
 		repo := new(mocks.MockFilmRepository)
-		filmCreator := service.NewFilmCreator(repo)
+		bus := new(mocks.MockEventBus)
+		filmCreator := service.NewFilmCreator(repo, bus)
 		handler := NewPostFilm(filmCreator)
 
 		repo.On("Save", mock.Anything, mock.Anything).Return(nil).Once()
+		bus.On("Publish", mock.Anything, mock.Anything).Return(nil).Once()
 
 		err := handler.Handle(ctx)
 		assert.NoError(t, err)
@@ -73,7 +75,8 @@ func TestPostFilm_Handle(t *testing.T) {
 		ctx := e.NewContext(req, rec)
 
 		repo := new(mocks.MockFilmRepository)
-		filmCreator := service.NewFilmCreator(repo)
+		bus := new(mocks.MockEventBus)
+		filmCreator := service.NewFilmCreator(repo, bus)
 		handler := NewPostFilm(filmCreator)
 
 		err := handler.Handle(ctx)
@@ -103,7 +106,8 @@ func TestPostFilm_Handle(t *testing.T) {
 		ctx.Set("userID", uuid.New())
 
 		repo := new(mocks.MockFilmRepository)
-		filmCreator := service.NewFilmCreator(repo)
+		bus := new(mocks.MockEventBus)
+		filmCreator := service.NewFilmCreator(repo, bus)
 		handler := NewPostFilm(filmCreator)
 
 		testErr := errors.New("something went wrong")

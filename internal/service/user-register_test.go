@@ -19,11 +19,13 @@ func TestUserRegister(t *testing.T) {
 	t.Run("returns the user saved in the repository", func(t *testing.T) {
 		repo := new(mocks.MockUserRepository)
 		hasher := new(mocks.MockPasswordHasher)
-		register := NewUserRegister(repo, hasher)
+		bus := new(mocks.MockEventBus)
+		register := NewUserRegister(repo, hasher, bus)
 
 		ctx := context.Background()
 		repo.On("Save", ctx, testUser).Return(testUser, nil)
 		hasher.On("Hash", mock.Anything).Return(testUser.Password, nil)
+		bus.On("Publish", mock.Anything, mock.Anything).Return(nil)
 
 		u, err := register.Register(ctx, testUser)
 		assert.NoError(t, err)
@@ -36,7 +38,8 @@ func TestUserRegister(t *testing.T) {
 	t.Run("returns an error if the repository fails to save user", func(t *testing.T) {
 		repo := new(mocks.MockUserRepository)
 		hasher := new(mocks.MockPasswordHasher)
-		register := NewUserRegister(repo, hasher)
+		bus := new(mocks.MockEventBus)
+		register := NewUserRegister(repo, hasher, bus)
 
 		ctx := context.Background()
 		testErr := errors.New("failed to save user")
@@ -53,7 +56,8 @@ func TestUserRegister(t *testing.T) {
 	t.Run("returns an error if password hashing fails", func(t *testing.T) {
 		repo := new(mocks.MockUserRepository)
 		hasher := new(mocks.MockPasswordHasher)
-		register := NewUserRegister(repo, hasher)
+		bus := new(mocks.MockEventBus)
+		register := NewUserRegister(repo, hasher, bus)
 
 		ctx := context.Background()
 		hashErr := errors.New("failed to hash password")

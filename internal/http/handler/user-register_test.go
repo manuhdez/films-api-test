@@ -24,6 +24,7 @@ type RegisterUserSuite struct {
 	recorder *httptest.ResponseRecorder
 	userRepo *mocks.MockUserRepository
 	hasher   *mocks.MockPasswordHasher
+	eventBus *mocks.MockEventBus
 	handler  RegisterUser
 }
 
@@ -31,8 +32,9 @@ func (suite *RegisterUserSuite) SetupTest() {
 	suite.recorder = httptest.NewRecorder()
 	suite.hasher = new(mocks.MockPasswordHasher)
 	suite.userRepo = new(mocks.MockUserRepository)
+	suite.eventBus = new(mocks.MockEventBus)
 	suite.handler = NewRegisterUser(
-		service.NewUserRegister(suite.userRepo, suite.hasher),
+		service.NewUserRegister(suite.userRepo, suite.hasher, suite.eventBus),
 	)
 }
 
@@ -53,6 +55,7 @@ func (suite *RegisterUserSuite) TestRegisterValidUser() {
 
 	suite.hasher.On("Hash", mockUser.Password).Return(mockUser.Password, nil).Once()
 	suite.userRepo.On("Save", mock.Anything, mock.AnythingOfType("user.User")).Return(user.User{}, nil).Once()
+	suite.eventBus.On("Publish", mock.Anything, mock.Anything).Return(nil).Once()
 	err := suite.handler.Handle(ctx)
 
 	assert.NoError(suite.T(), err)
