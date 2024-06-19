@@ -8,11 +8,12 @@ import (
 
 	"github.com/manuhdez/films-api-test/internal/domain"
 	"github.com/manuhdez/films-api-test/internal/domain/film"
-	"github.com/manuhdez/films-api-test/internal/infra"
 )
 
 type FilmCreatedEvent struct {
-	Film film.Film
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	CreatedBy string `json:"createdBy"`
 }
 
 func (FilmCreatedEvent) Key() string {
@@ -20,7 +21,7 @@ func (FilmCreatedEvent) Key() string {
 }
 
 func (e FilmCreatedEvent) Data() []byte {
-	data, err := json.Marshal(infra.NewFilmJSON(e.Film))
+	data, err := json.Marshal(e)
 	if err != nil {
 		log.Printf("Error marshalling json: %v", err)
 		return nil
@@ -44,7 +45,11 @@ func (fc FilmCreator) Create(ctx context.Context, f film.Film) error {
 		return errors.New("failed to save film")
 	}
 
-	event := FilmCreatedEvent{Film: f}
+	event := FilmCreatedEvent{
+		ID:        f.ID.String(),
+		Title:     f.Title,
+		CreatedBy: f.CreatedBy.String(),
+	}
 	err = fc.eventBus.Publish(ctx, event)
 	if err != nil {
 		log.Println("failed to publish film created event")

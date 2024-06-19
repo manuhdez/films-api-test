@@ -29,13 +29,14 @@ func NewRabbitEventBus(db *sql.DB) EventBus {
 	// instantiate use cases
 	userFilmRepository := infra.NewUserFilmsPostgresRepository(db)
 	counterCreator := service.NewUserFilmsCounterCreator(userFilmRepository)
+	counterIncrementer := service.NewUserFilmsCounterIncrementer(userFilmRepository)
 
 	publisher, err := setupPublisher(conn)
 	if err != nil {
 		log.Panicf("Failed to setup publisher: %v", err)
 	}
 
-	consumers, err := setupConsumers(conn, counterCreator)
+	consumers, err := setupConsumers(conn, counterCreator, counterIncrementer)
 	if err != nil {
 		log.Panicf("Failed to setup consumers: %v", err)
 	}
@@ -51,10 +52,14 @@ func setupPublisher(conn *rabbitmq.Conn) (Publisher, error) {
 	return NewApiPublisher(conn)
 }
 
-func setupConsumers(conn *rabbitmq.Conn, counterCreator service.UserFilmsCounterCreator) ([]Consumer, error) {
+func setupConsumers(
+	conn *rabbitmq.Conn,
+	counterCreator service.UserFilmsCounterCreator,
+	counterIncrementer service.UserFilmsCounterIncrementer,
+) ([]Consumer, error) {
 	var consumers []Consumer
 
-	incrementCountOnFilmCreatedConsumer, err := NewIncrementCountOnFilmCreatedConsumer(conn)
+	incrementCountOnFilmCreatedConsumer, err := NewIncrementCountOnFilmCreatedConsumer(conn, counterIncrementer)
 	if err != nil {
 		log.Printf("Failed to create increment count on film created consumer: %v", err)
 	} else {

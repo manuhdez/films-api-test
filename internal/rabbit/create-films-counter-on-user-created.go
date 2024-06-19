@@ -12,11 +12,6 @@ import (
 	"github.com/manuhdez/films-api-test/internal/service"
 )
 
-type eventData struct {
-	UserID   string `json:"id"`
-	Username string `json:"username"`
-}
-
 type CreateFilmsCounterOnUserCreated struct {
 	consumer       *rabbitmq.Consumer
 	counterCreator service.UserFilmsCounterCreator

@@ -18,9 +18,8 @@ import (
 )
 
 type Server struct {
-	engine   *echo.Echo
-	db       *sql.DB
-	eventBus rabbit.EventBus
+	engine *echo.Echo
+	db     *sql.DB
 }
 
 func New(db *sql.DB, bus rabbit.EventBus) Server {

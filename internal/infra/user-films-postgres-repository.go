@@ -3,6 +3,7 @@ package infra
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -34,14 +35,16 @@ func (r UserFilmsPostgresRepository) Create(ctx context.Context, userFilms userf
 }
 
 func (r UserFilmsPostgresRepository) Increment(ctx context.Context, userId uuid.UUID) error {
-	var userFilms = userfilms.UserFilms{UserId: userId}
-	current := r.db.WithContext(ctx).First(&userFilms)
-	if current.Error != nil {
-		return fmt.Errorf("cannot increment count, user has no counter: %v", current.Error)
+	var current userfilms.UserFilms
+	res := r.db.WithContext(ctx).Where("user_id = ?", userId).First(&current)
+	if res.Error != nil {
+		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("counter not found: %v", res.Error)
+		}
+		return fmt.Errorf("failed to get res counter: %v", res.Error)
 	}
 
-	userFilms.Films = userFilms.Films + 1
-	response := r.db.WithContext(ctx).Update("films", &userFilms)
+	response := r.db.WithContext(ctx).Model(&current).Where("user_id = ?", userId).Update("films", current.Films+1)
 	if response.Error != nil {
 		return fmt.Errorf("failed to increment count: %v", response.Error)
 	}

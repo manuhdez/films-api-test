@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/manuhdez/films-api-test/internal/domain/user"
 	"github.com/manuhdez/films-api-test/internal/infra"
@@ -33,8 +34,12 @@ func (srv UserLogin) Login(ctx context.Context, username, password string) (user
 
 		return user.User{}, searchErr
 	}
+	if username != u.Username {
+		log.Println("username mismatch", u.Username)
+		return user.User{}, ErrWrongCredentials
+	}
 
-	if match := srv.hasher.Compare(u.Password, password); match == false {
+	if match := srv.hasher.Compare(u.Password, password); !match {
 		return user.User{}, ErrWrongCredentials
 	}
 

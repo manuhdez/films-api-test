@@ -54,8 +54,8 @@ func (r *PostgresUserRepository) Save(c context.Context, u user.User) (user.User
 }
 
 func (r *PostgresUserRepository) SearchByUsername(c context.Context, username string) (user.User, error) {
-	var u = user.User{Username: username}
-	result := r.db.WithContext(c).First(&u)
+	var u user.User
+	result := r.db.WithContext(c).Where("username = ?", username).First(&u)
 	if result.Error != nil {
 		return user.User{}, fmt.Errorf("[Username not found]:%w", result.Error)
 	}
