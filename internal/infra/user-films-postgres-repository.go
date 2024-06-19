@@ -35,13 +35,9 @@ func (r UserFilmsPostgresRepository) Create(ctx context.Context, userFilms userf
 }
 
 func (r UserFilmsPostgresRepository) Increment(ctx context.Context, userId uuid.UUID) error {
-	var current userfilms.UserFilms
-	res := r.db.WithContext(ctx).Where("user_id = ?", userId).First(&current)
-	if res.Error != nil {
-		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("counter not found: %v", res.Error)
-		}
-		return fmt.Errorf("failed to get res counter: %v", res.Error)
+	current, err := r.Count(ctx, userId)
+	if err != nil {
+		return fmt.Errorf("failed to updated counter: %e", err)
 	}
 
 	response := r.db.WithContext(ctx).Model(&current).Where("user_id = ?", userId).Update("films", current.Films+1)
@@ -53,11 +49,15 @@ func (r UserFilmsPostgresRepository) Increment(ctx context.Context, userId uuid.
 }
 
 func (r UserFilmsPostgresRepository) Count(ctx context.Context, userId uuid.UUID) (userfilms.UserFilms, error) {
-	var userFilms = userfilms.UserFilms{UserId: userId}
-	current := r.db.WithContext(ctx).First(&userFilms)
-	if current.Error != nil {
-		return userfilms.UserFilms{}, fmt.Errorf("userfilms entry not found: %v", current.Error)
+	var counter userfilms.UserFilms
+	result := r.db.WithContext(ctx).Where("user_id = ?", userId).First(&counter)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return userfilms.UserFilms{}, fmt.Errorf("counter not found: %v", result.Error)
+		}
+
+		return userfilms.UserFilms{}, fmt.Errorf("error retrieving counter: %v", result.Error)
 	}
 
-	return userFilms, nil
+	return counter, nil
 }
