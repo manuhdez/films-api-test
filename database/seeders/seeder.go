@@ -7,12 +7,14 @@ import (
 	"github.com/manuhdez/films-api-test/database"
 	"github.com/manuhdez/films-api-test/internal/domain/film"
 	"github.com/manuhdez/films-api-test/internal/domain/user"
+	"github.com/manuhdez/films-api-test/internal/domain/userfilms"
 	"github.com/manuhdez/films-api-test/internal/infra"
 )
 
 type Repositories struct {
-	userRepository user.Repository
-	filmRepository film.Repository
+	userRepository        user.Repository
+	filmRepository        film.Repository
+	filmCounterRepository userfilms.Repository
 }
 
 type Seeder struct {
@@ -27,8 +29,9 @@ func NewSeeder() Seeder {
 	}
 
 	repos := Repositories{
-		userRepository: infra.NewPostgresUserRepository(db),
-		filmRepository: infra.NewPostgresFilmRepository(db),
+		userRepository:        infra.NewPostgresUserRepository(db),
+		filmRepository:        infra.NewPostgresFilmRepository(db),
+		filmCounterRepository: infra.NewUserFilmsPostgresRepository(db),
 	}
 
 	return Seeder{
@@ -40,4 +43,5 @@ func NewSeeder() Seeder {
 func (s Seeder) Seed() {
 	users := s.SeedUsers()
 	s.SeedFilms(users)
+	s.SeedFilmCounters(users)
 }
